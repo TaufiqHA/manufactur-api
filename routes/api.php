@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\RfqController;
+use App\Http\Controllers\RfqItemController;
 use App\Http\Controllers\SupplierController;
 
 // Public routes
@@ -28,6 +29,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // RFQ CRUD routes
     Route::apiResource('rfqs', RfqController::class);
+
+    // RFQ Item CRUD routes
+    Route::apiResource('rfq-items', RfqItemController::class);
 
     // Supplier CRUD routes
     Route::apiResource('suppliers', SupplierController::class);
