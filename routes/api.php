@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\MaterialController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -19,6 +20,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Project CRUD routes
     Route::apiResource('projects', ProjectController::class);
+
+    // Material CRUD routes
+    Route::apiResource('materials', MaterialController::class);
 });
 
 Route::get('/user', function (Request $request) {
