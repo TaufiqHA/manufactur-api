@@ -16,6 +16,7 @@ use App\Http\Controllers\ProjectItemController;
 use App\Http\Controllers\SubAssemblyController;
 use App\Http\Controllers\MachineController;
 use App\Http\Controllers\BomItemController;
+use App\Http\Controllers\ItemStepConfigsController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -66,6 +67,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Machine CRUD routes
     Route::apiResource('machines', MachineController::class);
+
+    // Item Step Configs CRUD routes
+    Route::apiResource('item-step-configs', ItemStepConfigsController::class);
+
+    // Additional route to get step configs by item ID
+    Route::get('project-items/{itemId}/step-configs', [ItemStepConfigsController::class, 'getByItemId']);
 });
 
 Route::get('/user', function (Request $request) {
