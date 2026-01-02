@@ -53,6 +53,22 @@ class PurchaseOrder extends Model
     }
 
     /**
+     * Relationship with PoItem model
+     */
+    public function poItems()
+    {
+        return $this->hasMany(PoItem::class, 'po_id');
+    }
+
+    /**
+     * Get items attribute (alias for poItems)
+     */
+    public function getItemsAttribute()
+    {
+        return $this->poItems;
+    }
+
+    /**
      * Relationship with ReceivingGood model
      */
     public function receivingGoods()

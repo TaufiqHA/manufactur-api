@@ -27,8 +27,11 @@ class PurchaseOrderTest extends TestCase
 
     public function test_can_get_all_purchase_orders(): void
     {
-        // Create some purchase orders
+        // Create some purchase orders with related items
         $purchaseOrders = PurchaseOrder::factory()->count(3)->create();
+        foreach ($purchaseOrders as $purchaseOrder) {
+            PoItem::factory()->count(2)->create(['po_id' => $purchaseOrder->id]);
+        }
 
         $response = $this->getJson('/api/purchase-orders');
 
@@ -48,13 +51,40 @@ class PurchaseOrderTest extends TestCase
                      'to',
                      'total'
                  ])
-                 ->assertJsonCount(3, 'data');
+                 ->assertJsonCount(3, 'data')
+                 ->assertJsonStructure([
+                     'data' => [
+                         '*' => [
+                             'id',
+                             'code',
+                             'date',
+                             'supplier_id',
+                             'rfq_id',
+                             'description',
+                             'status',
+                             'grand_total',
+                             'items' => [
+                                 '*' => [
+                                     'id',
+                                     'material_id',
+                                     'name',
+                                     'qty',
+                                     'price',
+                                     'po_id',
+                                     'created_at',
+                                     'updated_at'
+                                 ]
+                             ]
+                         ]
+                     ]
+                 ]);
     }
 
     public function test_can_get_single_purchase_order(): void
     {
-        // Create a purchase order
+        // Create a purchase order with related items
         $purchaseOrder = PurchaseOrder::factory()->create();
+        $poItems = PoItem::factory()->count(2)->create(['po_id' => $purchaseOrder->id]);
 
         $response = $this->getJson("/api/purchase-orders/{$purchaseOrder->id}");
 
@@ -68,6 +98,20 @@ class PurchaseOrderTest extends TestCase
                      'description' => $purchaseOrder->description,
                      'status' => $purchaseOrder->status,
                      'grand_total' => (string)$purchaseOrder->grand_total,
+                 ])
+                 ->assertJsonStructure([
+                     'items' => [
+                         '*' => [
+                             'id',
+                             'material_id',
+                             'name',
+                             'qty',
+                             'price',
+                             'po_id',
+                             'created_at',
+                             'updated_at'
+                         ]
+                     ]
                  ]);
     }
 
@@ -114,7 +158,21 @@ class PurchaseOrderTest extends TestCase
                      'status' => $data['status'],
                  ])
                  ->assertJsonPath('date', $data['date'] . 'T00:00:00.000000Z')
-                 ->assertJsonPath('grand_total', sprintf('%.2f', $data['grand_total']));
+                 ->assertJsonPath('grand_total', sprintf('%.2f', $data['grand_total']))
+                 ->assertJsonStructure([
+                     'items' => [
+                         '*' => [
+                             'id',
+                             'material_id',
+                             'name',
+                             'qty',
+                             'price',
+                             'po_id',
+                             'created_at',
+                             'updated_at'
+                         ]
+                     ]
+                 ]);
 
         $this->assertDatabaseHas('purchase_orders', [
             'code' => $data['code'],
@@ -146,6 +204,7 @@ class PurchaseOrderTest extends TestCase
     {
         // Create a purchase order and related models
         $purchaseOrder = PurchaseOrder::factory()->create();
+        $poItems = PoItem::factory()->count(2)->create(['po_id' => $purchaseOrder->id]);
         $supplier = Supplier::factory()->create();
         $rfq = Rfq::factory()->create();
 
@@ -171,7 +230,21 @@ class PurchaseOrderTest extends TestCase
                      'status' => $data['status'],
                  ])
                  ->assertJsonPath('date', $data['date'] . 'T00:00:00.000000Z')
-                 ->assertJsonPath('grand_total', sprintf('%.2f', $data['grand_total']));
+                 ->assertJsonPath('grand_total', sprintf('%.2f', $data['grand_total']))
+                 ->assertJsonStructure([
+                     'items' => [
+                         '*' => [
+                             'id',
+                             'material_id',
+                             'name',
+                             'qty',
+                             'price',
+                             'po_id',
+                             'created_at',
+                             'updated_at'
+                         ]
+                     ]
+                 ]);
 
         $this->assertDatabaseHas('purchase_orders', [
             'id' => $purchaseOrder->id,

@@ -17,7 +17,14 @@ class PurchaseOrderController extends Controller
      */
     public function index(): JsonResponse
     {
-        $purchaseOrders = PurchaseOrder::with(['supplier', 'rfq'])->paginate(10);
+        $purchaseOrders = PurchaseOrder::with(['supplier', 'rfq', 'poItems'])->paginate(10);
+
+        // Transform the collection to rename poItems to items
+        $purchaseOrders->getCollection()->transform(function ($purchaseOrder) {
+            $purchaseOrder->items = $purchaseOrder->poItems;
+            unset($purchaseOrder->poItems);
+            return $purchaseOrder;
+        });
 
         return response()->json($purchaseOrders);
     }
@@ -59,8 +66,11 @@ class PurchaseOrderController extends Controller
         }
 
         // Load the relationship to return the created PoItems
-        $purchaseOrder->load(['supplier', 'rfq']);
-        $purchaseOrder->poItems = $purchaseOrder->poItems;
+        $purchaseOrder->load(['supplier', 'rfq', 'poItems']);
+
+        // Rename poItems to items in the response
+        $purchaseOrder->items = $purchaseOrder->poItems;
+        unset($purchaseOrder->poItems);
 
         return response()->json($purchaseOrder, 201);
     }
@@ -70,7 +80,11 @@ class PurchaseOrderController extends Controller
      */
     public function show(PurchaseOrder $purchaseOrder): JsonResponse
     {
-        $purchaseOrder->load(['supplier', 'rfq']);
+        $purchaseOrder->load(['supplier', 'rfq', 'poItems']);
+
+        // Rename poItems to items in the response
+        $purchaseOrder->items = $purchaseOrder->poItems;
+        unset($purchaseOrder->poItems);
 
         return response()->json($purchaseOrder);
     }
@@ -95,6 +109,13 @@ class PurchaseOrderController extends Controller
         }
 
         $purchaseOrder->update($validator->validated());
+
+        // Load relationships including items for consistent response
+        $purchaseOrder->load(['supplier', 'rfq', 'poItems']);
+
+        // Rename poItems to items in the response
+        $purchaseOrder->items = $purchaseOrder->poItems;
+        unset($purchaseOrder->poItems);
 
         return response()->json($purchaseOrder);
     }
