@@ -12,6 +12,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\PoItemController;
 use App\Http\Controllers\ReceivingGoodController;
+use App\Http\Controllers\ProjectItemController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -26,6 +27,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Project CRUD routes
     Route::apiResource('projects', ProjectController::class);
+
+    // Project Item CRUD routes
+    Route::apiResource('project-items', ProjectItemController::class);
 
     // Material CRUD routes
     Route::apiResource('materials', MaterialController::class);
