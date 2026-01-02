@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
 {
@@ -44,4 +45,12 @@ class Project extends Model
         'total_qty' => 'integer',
         'is_locked' => 'boolean',
     ];
+
+    /**
+     * Get the project items for the project.
+     */
+    public function projectItems(): HasMany
+    {
+        return $this->hasMany(ProjectItem::class);
+    }
 }
