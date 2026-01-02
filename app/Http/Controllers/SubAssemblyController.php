@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SubAssembly;
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -64,6 +65,15 @@ class SubAssemblyController extends Controller
             $validated = $validator->validated();
 
             $subAssembly = SubAssembly::create($validated);
+
+            // Create tasks based on processes
+            try {
+                $this->createTasksFromProcesses($subAssembly, $validated['processes']);
+            } catch (Exception $e) {
+                // If task creation fails, log the error but still return success for sub assembly
+                // The sub assembly was created successfully, so we don't want to fail the entire request
+                \Log::error('Failed to create tasks for sub assembly: ' . $e->getMessage());
+            }
 
             return response()->json([
                 'success' => true,
@@ -195,6 +205,97 @@ class SubAssemblyController extends Controller
                 'message' => 'Failed to delete sub assembly',
                 'error' => $e->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Create tasks based on processes defined in sub assembly.
+     */
+    private function createTasksFromProcesses(SubAssembly $subAssembly, string $processesJson): void
+    {
+        $processes = json_decode($processesJson, true);
+
+        if (!is_array($processes)) {
+            return;
+        }
+
+        foreach ($processes as $process) {
+            // Handle both string and object formats for processes
+            $processName = null;
+
+            if (is_string($process)) {
+                // Process is a simple string
+                $processName = $process;
+            } elseif (is_array($process) && isset($process['name'])) {
+                // Process is an object with a name property
+                $processName = $process['name'];
+            } else {
+                continue;
+            }
+
+            if ($processName) {
+                // Get the project information from the sub assembly's item
+                $projectItem = $subAssembly->item;
+                if (!$projectItem) {
+                    continue; // Skip if project item doesn't exist
+                }
+
+                $project = $projectItem->project;
+                if (!$project) {
+                    continue; // Skip if project doesn't exist
+                }
+
+                // Create a task for each process
+                Task::create([
+                    'project_id' => $project->id,
+                    'project_name' => $project->name,
+                    'item_id' => $projectItem->id,
+                    'item_name' => $projectItem->name,
+                    'sub_assembly_id' => $subAssembly->id,
+                    'sub_assembly_name' => $subAssembly->name,
+                    'step' => $processName,
+                    'target_qty' => $subAssembly->total_needed, // Use the total needed quantity from sub assembly
+                    'status' => 'PENDING', // Default status for new tasks
+                    'daily_target' => null,
+                    'completed_qty' => 0,
+                    'defect_qty' => 0,
+                    'note' => null,
+                    'total_downtime_minutes' => 0,
+                ]);
+            }
+        }
+
+        // Create additional tasks for specific machines: LASPEN, LASMIG, PHOSPHATING, CAT, and PACKING
+        $additionalTasks = ['LASPEN', 'LASMIG', 'PHOSPHATING', 'CAT', 'PACKING'];
+
+        // Get the project information from the sub assembly's item
+        $projectItem = $subAssembly->item;
+        if (!$projectItem) {
+            return; // Skip if project item doesn't exist
+        }
+
+        $project = $projectItem->project;
+        if (!$project) {
+            return; // Skip if project doesn't exist
+        }
+
+        foreach ($additionalTasks as $taskName) {
+            Task::create([
+                'project_id' => $project->id,
+                'project_name' => $project->name,
+                'item_id' => $projectItem->id,
+                'item_name' => $projectItem->name,
+                'sub_assembly_id' => $subAssembly->id,
+                'sub_assembly_name' => $subAssembly->name,
+                'step' => $taskName,
+                'target_qty' => $subAssembly->total_needed, // Use the total needed quantity from sub assembly
+                'status' => 'PENDING', // Default status for new tasks
+                'daily_target' => null,
+                'completed_qty' => 0,
+                'defect_qty' => 0,
+                'note' => null,
+                'total_downtime_minutes' => 0,
+            ]);
         }
     }
 }

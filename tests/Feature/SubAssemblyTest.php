@@ -229,4 +229,123 @@ class SubAssemblyTest extends TestCase
         $response = $this->deleteJson("/api/sub-assemblies/{$subAssembly->id}");
         $response->assertStatus(401);
     }
+
+    public function test_tasks_are_created_automatically_when_sub_assembly_is_created(): void
+    {
+        $projectItem = ProjectItem::factory()->create();
+        $material = Material::factory()->create();
+
+        $data = [
+            'item_id' => $projectItem->id,
+            'name' => 'Test Sub Assembly with Tasks',
+            'qty_per_parent' => 2,
+            'total_needed' => 10,
+            'completed_qty' => 0,
+            'total_produced' => 0,
+            'consumed_qty' => 0,
+            'material_id' => $material->id,
+            'processes' => json_encode([
+                [
+                    'name' => 'Cutting',
+                    'duration' => 60,
+                    'status' => 'pending',
+                ],
+                [
+                    'name' => 'Drilling',
+                    'duration' => 45,
+                    'status' => 'pending',
+                ],
+                [
+                    'name' => 'Assembly',
+                    'duration' => 90,
+                    'status' => 'pending',
+                ]
+            ]),
+            'step_stats' => json_encode([
+                'total_steps' => 3,
+                'completed_steps' => 0,
+                'pending_steps' => 3,
+            ]),
+            'is_locked' => false,
+        ];
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->token,
+        ])->postJson('/api/sub-assemblies', $data);
+
+        $response->assertStatus(201)
+                 ->assertJson([
+                     'success' => true,
+                 ]);
+
+        // Check that the sub assembly was created
+        $this->assertDatabaseHas('sub_assemblies', [
+            'name' => 'Test Sub Assembly with Tasks',
+            'qty_per_parent' => 2,
+            'total_needed' => 10,
+        ]);
+
+        // Check that tasks were created based on processes + additional tasks
+        $this->assertDatabaseCount('tasks', 8); // 3 processes + 5 additional tasks = 8 tasks
+
+        // Check that tasks are linked to the sub assembly
+        $subAssembly = SubAssembly::where('name', 'Test Sub Assembly with Tasks')->firstOrFail();
+
+        $this->assertDatabaseHas('tasks', [
+            'sub_assembly_id' => $subAssembly->id,
+            'step' => 'Cutting',
+            'target_qty' => 10, // Should match total_needed from sub assembly
+            'status' => 'PENDING',
+        ]);
+
+        $this->assertDatabaseHas('tasks', [
+            'sub_assembly_id' => $subAssembly->id,
+            'step' => 'Drilling',
+            'target_qty' => 10, // Should match total_needed from sub assembly
+            'status' => 'PENDING',
+        ]);
+
+        $this->assertDatabaseHas('tasks', [
+            'sub_assembly_id' => $subAssembly->id,
+            'step' => 'Assembly',
+            'target_qty' => 10, // Should match total_needed from sub assembly
+            'status' => 'PENDING',
+        ]);
+
+        // Check that additional tasks were created
+        $this->assertDatabaseHas('tasks', [
+            'sub_assembly_id' => $subAssembly->id,
+            'step' => 'LASPEN',
+            'target_qty' => 10, // Should match total_needed from sub assembly
+            'status' => 'PENDING',
+        ]);
+
+        $this->assertDatabaseHas('tasks', [
+            'sub_assembly_id' => $subAssembly->id,
+            'step' => 'LASMIG',
+            'target_qty' => 10, // Should match total_needed from sub assembly
+            'status' => 'PENDING',
+        ]);
+
+        $this->assertDatabaseHas('tasks', [
+            'sub_assembly_id' => $subAssembly->id,
+            'step' => 'PHOSPHATING',
+            'target_qty' => 10, // Should match total_needed from sub assembly
+            'status' => 'PENDING',
+        ]);
+
+        $this->assertDatabaseHas('tasks', [
+            'sub_assembly_id' => $subAssembly->id,
+            'step' => 'CAT',
+            'target_qty' => 10, // Should match total_needed from sub assembly
+            'status' => 'PENDING',
+        ]);
+
+        $this->assertDatabaseHas('tasks', [
+            'sub_assembly_id' => $subAssembly->id,
+            'step' => 'PACKING',
+            'target_qty' => 10, // Should match total_needed from sub assembly
+            'status' => 'PENDING',
+        ]);
+    }
 }
