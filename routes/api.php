@@ -13,6 +13,7 @@ use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\PoItemController;
 use App\Http\Controllers\ReceivingGoodController;
 use App\Http\Controllers\ProjectItemController;
+use App\Http\Controllers\SubAssemblyController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -54,6 +55,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Receiving Item CRUD routes
     Route::apiResource('receiving-items', \App\Http\Controllers\ReceivingItemController::class);
+
+    // Sub Assembly CRUD routes
+    Route::apiResource('sub-assemblies', SubAssemblyController::class);
 });
 
 Route::get('/user', function (Request $request) {
