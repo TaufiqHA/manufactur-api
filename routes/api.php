@@ -17,6 +17,7 @@ use App\Http\Controllers\SubAssemblyController;
 use App\Http\Controllers\MachineController;
 use App\Http\Controllers\BomItemController;
 use App\Http\Controllers\ItemStepConfigsController;
+use App\Http\Controllers\TaskController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -73,6 +74,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Additional route to get step configs by item ID
     Route::get('project-items/{itemId}/step-configs', [ItemStepConfigsController::class, 'getByItemId']);
+
+    // Task CRUD routes
+    Route::apiResource('tasks', TaskController::class);
+
+    // Additional Task-specific routes
+    Route::patch('tasks/{task}/status', [TaskController::class, 'updateStatus']);
+    Route::patch('tasks/{task}/completion', [TaskController::class, 'updateCompletion']);
+    Route::patch('tasks/{task}/downtime', [TaskController::class, 'updateDowntime']);
 });
 
 Route::get('/user', function (Request $request) {
