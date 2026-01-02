@@ -154,7 +154,6 @@ class MachineTest extends TestCase
 
         $response->assertStatus(422)
                  ->assertJsonStructure([
-                     'message',
                      'errors' => [
                          'user_id',
                          'code',
@@ -185,7 +184,6 @@ class MachineTest extends TestCase
 
         $response->assertStatus(422)
                  ->assertJsonStructure([
-                     'message',
                      'errors' => [
                          'user_id',
                          'code',

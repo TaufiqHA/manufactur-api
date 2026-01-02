@@ -15,6 +15,7 @@ use App\Http\Controllers\ReceivingGoodController;
 use App\Http\Controllers\ProjectItemController;
 use App\Http\Controllers\SubAssemblyController;
 use App\Http\Controllers\MachineController;
+use App\Http\Controllers\BomItemController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -35,6 +36,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Material CRUD routes
     Route::apiResource('materials', MaterialController::class);
+
+    // BOM Item CRUD routes
+    Route::apiResource('bom-items', BomItemController::class);
 
     // RFQ CRUD routes
     Route::apiResource('rfqs', RfqController::class);
