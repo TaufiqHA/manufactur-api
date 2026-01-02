@@ -6,6 +6,7 @@ use App\Models\ReceivingGood;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class ReceivingGoodController extends Controller
 {
@@ -15,7 +16,7 @@ class ReceivingGoodController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $receivingGoods = ReceivingGood::with(['purchaseOrder.supplier'])->latest()->paginate(10);
+            $receivingGoods = ReceivingGood::with(['purchaseOrder.supplier', 'items'])->latest()->paginate(10);
             return response()->json($receivingGoods);
         } catch (\Exception $e) {
             return response()->json([
@@ -36,6 +37,10 @@ class ReceivingGoodController extends Controller
                 'code' => 'required|string|max:255',
                 'date' => 'required|date',
                 'po_id' => 'required|exists:purchase_orders,id',
+                'items' => 'required|array',
+                'items.*.material_id' => 'required|exists:materials,id',
+                'items.*.name' => 'required|string|max:255',
+                'items.*.qty' => 'required|integer|min:1',
             ]);
 
             if ($validator->fails()) {
@@ -47,7 +52,29 @@ class ReceivingGoodController extends Controller
             }
 
             $validatedData = $validator->validated();
+
+            // Extract items data before creating the receiving good
+            $itemsData = $validatedData['items'];
+            unset($validatedData['items']);
+
+            \DB::beginTransaction();
+
             $receivingGood = ReceivingGood::create($validatedData);
+
+            // Create receiving items and update material stock
+            foreach ($itemsData as $itemData) {
+                $itemData['receiving_id'] = $receivingGood->id;
+                \App\Models\ReceivingItem::create($itemData);
+
+                // Update material stock
+                $material = \App\Models\Material::find($itemData['material_id']);
+                if ($material) {
+                    $material->current_stock += $itemData['qty'];
+                    $material->save();
+                }
+            }
+
+            \DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -62,6 +89,7 @@ class ReceivingGoodController extends Controller
                 ]
             ], 201);
         } catch (\Exception $e) {
+            \DB::rollback();
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create receiving good',
@@ -76,7 +104,7 @@ class ReceivingGoodController extends Controller
     public function show(ReceivingGood $receivingGood): JsonResponse
     {
         try {
-            $receivingGood->load('purchaseOrder');
+            $receivingGood->load(['purchaseOrder', 'items.material']);
             return response()->json([
                 'id' => $receivingGood->id,
                 'code' => $receivingGood->code,
@@ -84,7 +112,8 @@ class ReceivingGoodController extends Controller
                 'po_id' => $receivingGood->po_id,
                 'created_at' => $receivingGood->created_at,
                 'updated_at' => $receivingGood->updated_at,
-                'purchase_order' => $receivingGood->purchaseOrder
+                'purchase_order' => $receivingGood->purchaseOrder,
+                'items' => $receivingGood->items
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -105,6 +134,10 @@ class ReceivingGoodController extends Controller
                 'code' => 'required|string|max:255',
                 'date' => 'required|date',
                 'po_id' => 'required|exists:purchase_orders,id',
+                'items' => 'sometimes|array',
+                'items.*.material_id' => 'required|exists:materials,id',
+                'items.*.name' => 'required|string|max:255',
+                'items.*.qty' => 'required|integer|min:1',
             ]);
 
             if ($validator->fails()) {
@@ -116,7 +149,48 @@ class ReceivingGoodController extends Controller
             }
 
             $validatedData = $validator->validated();
+
+            // Extract items data if present
+            $itemsData = null;
+            if (isset($validatedData['items'])) {
+                $itemsData = $validatedData['items'];
+                unset($validatedData['items']);
+            }
+
+            \DB::beginTransaction();
+
             $receivingGood->update($validatedData);
+
+            // Update receiving items if provided
+            if ($itemsData !== null) {
+                // Get existing items to revert stock changes
+                $existingItems = $receivingGood->items;
+                foreach ($existingItems as $existingItem) {
+                    $material = \App\Models\Material::find($existingItem->material_id);
+                    if ($material) {
+                        $material->current_stock -= $existingItem->qty;
+                        $material->save();
+                    }
+                }
+
+                // Delete existing items
+                $receivingGood->items()->delete();
+
+                // Create new items and update material stock
+                foreach ($itemsData as $itemData) {
+                    $itemData['receiving_id'] = $receivingGood->id;
+                    \App\Models\ReceivingItem::create($itemData);
+
+                    // Update material stock
+                    $material = \App\Models\Material::find($itemData['material_id']);
+                    if ($material) {
+                        $material->current_stock += $itemData['qty'];
+                        $material->save();
+                    }
+                }
+            }
+
+            \DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -131,6 +205,7 @@ class ReceivingGoodController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
+            \DB::rollback();
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update receiving good',
@@ -145,13 +220,28 @@ class ReceivingGoodController extends Controller
     public function destroy(ReceivingGood $receivingGood): JsonResponse
     {
         try {
+            \DB::beginTransaction();
+
+            // Get existing items to revert stock changes
+            $existingItems = $receivingGood->items;
+            foreach ($existingItems as $existingItem) {
+                $material = \App\Models\Material::find($existingItem->material_id);
+                if ($material) {
+                    $material->current_stock -= $existingItem->qty;
+                    $material->save();
+                }
+            }
+
             $receivingGood->delete();
+
+            \DB::commit();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Receiving Good deleted successfully.'
             ]);
         } catch (\Exception $e) {
+            \DB::rollback();
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete receiving good',

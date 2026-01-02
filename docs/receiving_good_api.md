@@ -16,7 +16,7 @@ Authorization: Bearer {token}
 ### 1. Get All Receiving Goods
 **GET** `/api/receiving-goods`
 
-Retrieve a paginated list of all receiving goods.
+Retrieve a paginated list of all receiving goods, including associated receiving items.
 
 #### Headers
 - `Authorization: Bearer {token}`
@@ -59,7 +59,30 @@ Retrieve a paginated list of all receiving goods.
           "created_at": "2023-11-01T08:00:00.000000Z",
           "updated_at": "2023-11-01T08:00:00.000000Z"
         }
-      }
+      },
+      "items": [
+        {
+          "id": 1,
+          "receiving_id": 1,
+          "material_id": 1,
+          "name": "Steel Plate",
+          "qty": 100,
+          "created_at": "2023-12-01T10:00:00.000000Z",
+          "updated_at": "2023-12-01T10:00:00.000000Z",
+          "material": {
+            "id": 1,
+            "code": "MAT-001",
+            "name": "Steel Plate",
+            "unit": "kg",
+            "current_stock": 500,
+            "safety_stock": 100,
+            "price_per_unit": "5.50",
+            "category": "Raw Material",
+            "created_at": "2023-11-01T08:00:00.000000Z",
+            "updated_at": "2023-11-01T08:00:00.000000Z"
+          }
+        }
+      ]
     }
   ],
   "first_page_url": "http://localhost:8000/api/receiving-goods?page=1",
@@ -98,7 +121,7 @@ Retrieve a paginated list of all receiving goods.
 ### 2. Get Single Receiving Good
 **GET** `/api/receiving-goods/{id}`
 
-Retrieve a specific receiving good by its ID.
+Retrieve a specific receiving good by its ID, including associated receiving items.
 
 #### Path Parameters
 - `id` (required): The ID of the receiving good
@@ -137,7 +160,30 @@ Retrieve a specific receiving good by its ID.
       "created_at": "2023-11-01T08:00:00.000000Z",
       "updated_at": "2023-11-01T08:00:00.000000Z"
     }
-  }
+  },
+  "items": [
+    {
+      "id": 1,
+      "receiving_id": 1,
+      "material_id": 1,
+      "name": "Steel Plate",
+      "qty": 100,
+      "created_at": "2023-12-01T10:00:00.000000Z",
+      "updated_at": "2023-12-01T10:00:00.000000Z",
+      "material": {
+        "id": 1,
+        "code": "MAT-001",
+        "name": "Steel Plate",
+        "unit": "kg",
+        "current_stock": 500,
+        "safety_stock": 100,
+        "price_per_unit": "5.50",
+        "category": "Raw Material",
+        "created_at": "2023-11-01T08:00:00.000000Z",
+        "updated_at": "2023-11-01T08:00:00.000000Z"
+      }
+    }
+  ]
 }
 ```
 - **404 Not Found**: Receiving good not found
@@ -146,7 +192,7 @@ Retrieve a specific receiving good by its ID.
 ### 3. Create Receiving Good
 **POST** `/api/receiving-goods`
 
-Create a new receiving good.
+Create a new receiving good with optional associated receiving items. When receiving items are included, the system automatically updates the material stock by increasing the current stock of each material by the received quantity.
 
 #### Headers
 - `Authorization: Bearer {token}`
@@ -157,7 +203,19 @@ Create a new receiving good.
 {
   "code": "RG-NEW123",
   "date": "2023-12-15",
-  "po_id": 1
+  "po_id": 1,
+  "items": [
+    {
+      "material_id": 1,
+      "name": "Steel Plate",
+      "qty": 100
+    },
+    {
+      "material_id": 2,
+      "name": "Aluminum Rod",
+      "qty": 50
+    }
+  ]
 }
 ```
 
@@ -165,9 +223,13 @@ Create a new receiving good.
 - `code` (required, string): The code for the receiving good (max 255 characters)
 - `date` (required, date): The date of the receiving good
 - `po_id` (required, integer): The ID of the associated purchase order
+- `items` (required, array): Array of receiving items associated with this receiving good
+  - `material_id` (required, integer): The ID of the material
+  - `name` (required, string): The name of the receiving item (max 255 characters)
+  - `qty` (required, integer): The quantity of the item (minimum 1)
 
 #### Response
-- **201 Created**: Successfully created the receiving good
+- **201 Created**: Successfully created the receiving good with items
 ```json
 {
   "success": true,
@@ -199,7 +261,9 @@ Create a new receiving good.
 ### 4. Update Receiving Good
 **PUT** `/api/receiving-goods/{id}` or **PATCH** `/api/receiving-goods/{id}`
 
-Update an existing receiving good.
+Update an existing receiving good with optional associated receiving items. When receiving items are included, the system automatically updates the material stock by:
+1. Reverting the stock changes from existing items (decreasing current stock by the original received quantities)
+2. Applying the new stock changes (increasing current stock by the new received quantities)
 
 #### Path Parameters
 - `id` (required): The ID of the receiving good to update
@@ -213,7 +277,19 @@ Update an existing receiving good.
 {
   "code": "RG-UPDATED123",
   "date": "2023-12-20",
-  "po_id": 2
+  "po_id": 2,
+  "items": [
+    {
+      "material_id": 1,
+      "name": "Steel Plate",
+      "qty": 150
+    },
+    {
+      "material_id": 3,
+      "name": "Copper Wire",
+      "qty": 75
+    }
+  ]
 }
 ```
 
@@ -221,6 +297,10 @@ Update an existing receiving good.
 - `code` (required, string): The code for the receiving good (max 255 characters)
 - `date` (required, date): The date of the receiving good
 - `po_id` (required, integer): The ID of the associated purchase order
+- `items` (optional, array): Array of receiving items associated with this receiving good (if provided, replaces all existing items)
+  - `material_id` (required, integer): The ID of the material
+  - `name` (required, string): The name of the receiving item (max 255 characters)
+  - `qty` (required, integer): The quantity of the item (minimum 1)
 
 #### Response
 - **200 OK**: Successfully updated the receiving good
@@ -256,7 +336,7 @@ Update an existing receiving good.
 ### 5. Delete Receiving Good
 **DELETE** `/api/receiving-goods/{id}`
 
-Delete a receiving good.
+Delete a receiving good. When a receiving good is deleted, the system automatically reverts the material stock changes by decreasing the current stock of each associated material by the received quantities.
 
 #### Path Parameters
 - `id` (required): The ID of the receiving good to delete
@@ -337,3 +417,15 @@ Delete a receiving good.
 | address | string | Address of the supplier |
 | created_at | string | Creation timestamp |
 | updated_at | string | Last update timestamp |
+
+### Receiving Item Object
+| Field | Type | Description |
+|-------|------|-------------|
+| id | integer | Unique identifier for the receiving item |
+| receiving_id | integer | ID of the associated receiving good |
+| material_id | integer | ID of the associated material |
+| name | string | Name of the receiving item |
+| qty | integer | Quantity of the receiving item |
+| created_at | string | Creation timestamp |
+| updated_at | string | Last update timestamp |
+| material | object | Associated material object |

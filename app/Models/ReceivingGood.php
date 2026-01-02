@@ -37,4 +37,12 @@ class ReceivingGood extends Model
     {
         return $this->belongsTo(PurchaseOrder::class, 'po_id');
     }
+
+    /**
+     * Relationship with ReceivingItem model
+     */
+    public function items()
+    {
+        return $this->hasMany(ReceivingItem::class, 'receiving_id');
+    }
 }

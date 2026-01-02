@@ -47,6 +47,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Receiving Good CRUD routes
     Route::apiResource('receiving-goods', ReceivingGoodController::class);
+
+    // Receiving Item CRUD routes
+    Route::apiResource('receiving-items', \App\Http\Controllers\ReceivingItemController::class);
 });
 
 Route::get('/user', function (Request $request) {
