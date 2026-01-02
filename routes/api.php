@@ -14,6 +14,7 @@ use App\Http\Controllers\PoItemController;
 use App\Http\Controllers\ReceivingGoodController;
 use App\Http\Controllers\ProjectItemController;
 use App\Http\Controllers\SubAssemblyController;
+use App\Http\Controllers\MachineController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -58,6 +59,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Sub Assembly CRUD routes
     Route::apiResource('sub-assemblies', SubAssemblyController::class);
+
+    // Machine CRUD routes
+    Route::apiResource('machines', MachineController::class);
 });
 
 Route::get('/user', function (Request $request) {
