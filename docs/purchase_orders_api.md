@@ -167,7 +167,21 @@ Create a new purchase order.
     "rfq_id": 1,
     "description": "New purchase order",
     "status": "OPEN",
-    "grand_total": 2500.0
+    "grand_total": 2500.0,
+    "po_items": [
+        {
+            "material_id": 1,
+            "name": "Material Item 1",
+            "qty": 10,
+            "price": 150.00
+        },
+        {
+            "material_id": 2,
+            "name": "Material Item 2",
+            "qty": 5,
+            "price": 200.00
+        }
+    ]
 }
 ```
 
@@ -180,6 +194,11 @@ Create a new purchase order.
 -   `description` (optional): Description of the purchase order (string)
 -   `status` (required): Status of the purchase order (enum: OPEN, RECEIVED)
 -   `grand_total` (required): Total amount of the purchase order (numeric, minimum 0)
+-   `po_items` (required): Array of purchase order items (array of objects)
+    -   `po_items[].material_id` (required): ID of the material (integer, must exist in materials table)
+    -   `po_items[].name` (required): Name of the item (string, max 255 characters)
+    -   `po_items[].qty` (required): Quantity of the item (integer, minimum 1)
+    -   `po_items[].price` (optional): Price of the item (numeric, minimum 0)
 
 #### Response
 
@@ -214,7 +233,29 @@ Create a new purchase order.
         "status": "DRAFT",
         "created_at": "2023-11-01T10:00:00.000000Z",
         "updated_at": "2023-11-01T10:00:00.000000Z"
-    }
+    },
+    "poItems": [
+        {
+            "id": 1,
+            "po_id": 2,
+            "material_id": 1,
+            "name": "Material Item 1",
+            "qty": 10,
+            "price": "150.00",
+            "created_at": "2023-12-02T10:00:00.000000Z",
+            "updated_at": "2023-12-02T10:00:00.000000Z"
+        },
+        {
+            "id": 2,
+            "po_id": 2,
+            "material_id": 2,
+            "name": "Material Item 2",
+            "qty": 5,
+            "price": "200.00",
+            "created_at": "2023-12-02T10:00:00.000000Z",
+            "updated_at": "2023-12-02T10:00:00.000000Z"
+        }
+    ]
 }
 ```
 

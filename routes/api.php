@@ -10,6 +10,7 @@ use App\Http\Controllers\RfqController;
 use App\Http\Controllers\RfqItemController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\PoItemController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -39,6 +40,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Purchase Order CRUD routes
     Route::apiResource('purchase-orders', PurchaseOrderController::class);
+
+    // Po Item CRUD routes
+    Route::apiResource('po-items', PoItemController::class);
 });
 
 Route::get('/user', function (Request $request) {

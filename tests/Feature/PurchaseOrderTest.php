@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Models\Rfq;
+use App\Models\PoItem;
+use App\Models\Material;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -69,11 +71,13 @@ class PurchaseOrderTest extends TestCase
                  ]);
     }
 
-    public function test_can_create_purchase_order(): void
+    public function test_can_create_purchase_order_with_po_items(): void
     {
         // Create related models
         $supplier = Supplier::factory()->create();
         $rfq = Rfq::factory()->create();
+        $material1 = Material::factory()->create();
+        $material2 = Material::factory()->create();
 
         $data = [
             'code' => 'PO-001',
@@ -83,6 +87,20 @@ class PurchaseOrderTest extends TestCase
             'description' => 'Test purchase order',
             'status' => 'OPEN',
             'grand_total' => 1500.00,
+            'po_items' => [
+                [
+                    'material_id' => $material1->id,
+                    'name' => 'Material Item 1',
+                    'qty' => 10,
+                    'price' => 150.00
+                ],
+                [
+                    'material_id' => $material2->id,
+                    'name' => 'Material Item 2',
+                    'qty' => 5,
+                    'price' => 200.00
+                ]
+            ]
         ];
 
         $response = $this->postJson('/api/purchase-orders', $data);
@@ -106,6 +124,21 @@ class PurchaseOrderTest extends TestCase
             'description' => $data['description'],
             'status' => $data['status'],
             'grand_total' => $data['grand_total'],
+        ]);
+
+        // Check that PoItems were created
+        $this->assertDatabaseCount('po_items', 2);
+        $this->assertDatabaseHas('po_items', [
+            'material_id' => $material1->id,
+            'name' => 'Material Item 1',
+            'qty' => 10,
+            'price' => 150.00,
+        ]);
+        $this->assertDatabaseHas('po_items', [
+            'material_id' => $material2->id,
+            'name' => 'Material Item 2',
+            'qty' => 5,
+            'price' => 200.00,
         ]);
     }
 
@@ -169,12 +202,28 @@ class PurchaseOrderTest extends TestCase
         ]);
     }
 
-    public function test_validation_for_creating_purchase_order(): void
+    public function test_validation_for_creating_purchase_order_with_po_items(): void
     {
-        $response = $this->postJson('/api/purchase-orders', []);
+        $response = $this->postJson('/api/purchase-orders', [
+            'code' => 'PO-001',
+            'date' => '2023-12-01',
+            'supplier_id' => 1,
+            'rfq_id' => 1,
+            'description' => 'Test purchase order',
+            'status' => 'OPEN',
+            'grand_total' => 1500.00,
+            'po_items' => [
+                [
+                    'material_id' => 999, // Non-existent material
+                    'name' => 'Material Item 1',
+                    'qty' => 10,
+                    'price' => 150.00
+                ]
+            ]
+        ]);
 
         $response->assertStatus(422)
-                 ->assertJsonValidationErrors(['code', 'date', 'supplier_id', 'rfq_id', 'status']);
+                 ->assertJsonValidationErrors(['po_items.0.material_id']);
     }
 
     public function test_validation_for_updating_purchase_order(): void
