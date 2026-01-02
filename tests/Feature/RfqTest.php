@@ -72,6 +72,57 @@ class RfqTest extends TestCase
         ]);
     }
 
+    public function test_can_create_rfq_with_items(): void
+    {
+        $this->actingAs($this->user);
+
+        // Create a material for testing
+        $material = \App\Models\Material::factory()->create();
+
+        $data = [
+            'code' => 'RFQ-TEST-002',
+            'date' => '2024-12-31',
+            'description' => 'Test RFQ with items',
+            'status' => 'DRAFT',
+            'items' => [
+                [
+                    'material_id' => $material->id,
+                    'name' => 'Test Item 1',
+                    'qty' => 10,
+                    'price' => 100.00,
+                ],
+                [
+                    'material_id' => $material->id,
+                    'name' => 'Test Item 2',
+                    'qty' => 5,
+                    'price' => 200.00,
+                ],
+            ],
+        ];
+
+        $response = $this->postJson('/api/rfqs', $data);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('rfqs', [
+            'code' => 'RFQ-TEST-002',
+            'date' => '2024-12-31 00:00:00',
+            'description' => 'Test RFQ with items',
+            'status' => 'DRAFT',
+        ]);
+
+        $this->assertDatabaseHas('rfq_items', [
+            'name' => 'Test Item 1',
+            'qty' => 10,
+            'price' => 100.00,
+        ]);
+
+        $this->assertDatabaseHas('rfq_items', [
+            'name' => 'Test Item 2',
+            'qty' => 5,
+            'price' => 200.00,
+        ]);
+    }
+
     public function test_validation_required_for_creating_rfq(): void
     {
         $this->actingAs($this->user);

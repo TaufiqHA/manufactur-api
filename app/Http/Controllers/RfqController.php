@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Rfq;
+use App\Models\RfqItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -29,13 +30,31 @@ class RfqController extends Controller
             'date' => 'required|date',
             'description' => 'nullable|string',
             'status' => 'required|in:DRAFT,PO_CREATED',
+            'items' => 'nullable|array',
+            'items.*.material_id' => 'required|exists:materials,id',
+            'items.*.name' => 'required|string|max:255',
+            'items.*.qty' => 'required|integer|min:1',
+            'items.*.price' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $rfq = Rfq::create($validator->validated());
+        $validatedData = $validator->validated();
+        $items = $validatedData['items'] ?? [];
+        unset($validatedData['items']);
+
+        $rfq = Rfq::create($validatedData);
+
+        // Create RFQ items if provided
+        foreach ($items as $itemData) {
+            $itemData['rfq_id'] = $rfq->id;
+            RfqItem::create($itemData);
+        }
+
+        // Load the RFQ with its items to return the complete data
+        $rfq->load('rfqItems');
 
         return response()->json($rfq, Response::HTTP_CREATED);
     }

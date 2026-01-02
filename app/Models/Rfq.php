@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Rfq extends Model
 {
@@ -30,4 +31,12 @@ class Rfq extends Model
     protected $casts = [
         'date' => 'date',
     ];
+
+    /**
+     * Get the items for the RFQ.
+     */
+    public function rfqItems(): HasMany
+    {
+        return $this->hasMany(RfqItem::class);
+    }
 }

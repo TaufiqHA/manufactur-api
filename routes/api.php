@@ -9,6 +9,7 @@ use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\RfqController;
 use App\Http\Controllers\RfqItemController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\PurchaseOrderController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -35,6 +36,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Supplier CRUD routes
     Route::apiResource('suppliers', SupplierController::class);
+
+    // Purchase Order CRUD routes
+    Route::apiResource('purchase-orders', PurchaseOrderController::class);
 });
 
 Route::get('/user', function (Request $request) {
