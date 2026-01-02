@@ -51,4 +51,12 @@ class PurchaseOrder extends Model
     {
         return $this->belongsTo(Rfq::class, 'rfq_id');
     }
+
+    /**
+     * Relationship with ReceivingGood model
+     */
+    public function receivingGoods()
+    {
+        return $this->hasMany(ReceivingGood::class, 'po_id');
+    }
 }

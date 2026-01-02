@@ -11,6 +11,7 @@ use App\Http\Controllers\RfqItemController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\PoItemController;
+use App\Http\Controllers\ReceivingGoodController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -43,6 +44,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Po Item CRUD routes
     Route::apiResource('po-items', PoItemController::class);
+
+    // Receiving Good CRUD routes
+    Route::apiResource('receiving-goods', ReceivingGoodController::class);
 });
 
 Route::get('/user', function (Request $request) {
