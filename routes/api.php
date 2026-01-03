@@ -86,6 +86,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Stock Movement CRUD routes
     Route::apiResource('stock-movements', StockMovementController::class);
+
+    // Step Stock Balance CRUD routes
+    Route::apiResource('step-stock-balances', \App\Http\Controllers\StepStockBalanceController::class);
 });
 
 Route::get('/user', function (Request $request) {
