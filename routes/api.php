@@ -18,6 +18,7 @@ use App\Http\Controllers\MachineController;
 use App\Http\Controllers\BomItemController;
 use App\Http\Controllers\ItemStepConfigsController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\StockMovementController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -82,6 +83,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('tasks/{task}/status', [TaskController::class, 'updateStatus']);
     Route::patch('tasks/{task}/completion', [TaskController::class, 'updateCompletion']);
     Route::patch('tasks/{task}/downtime', [TaskController::class, 'updateDowntime']);
+
+    // Stock Movement CRUD routes
+    Route::apiResource('stock-movements', StockMovementController::class);
 });
 
 Route::get('/user', function (Request $request) {
