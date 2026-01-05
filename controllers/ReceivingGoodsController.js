@@ -39,6 +39,8 @@ const ReceivingGoodsController = {
       }
 
       const receiving = await ReceivingGoods.create(req.body);
+
+      // The stock update is handled in the model's create method
       res.status(201).json(receiving);
     } catch (error) {
       console.error('Error creating receiving goods:', error);

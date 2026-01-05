@@ -158,12 +158,25 @@ const formatSupplier = (supplier) => {
 
 // Format RFQ response to match frontend structure
 const formatRFQ = (rfq) => {
+  // Parse items if it's a JSON string, otherwise use as-is
+  let parsedItems = rfq.items || [];
+  if (typeof rfq.items === 'string') {
+    try {
+      parsedItems = JSON.parse(rfq.items);
+    } catch (e) {
+      console.error('Error parsing RFQ items:', e);
+      parsedItems = [];
+    }
+  } else if (rfq.items === null || rfq.items === undefined) {
+    parsedItems = [];
+  }
+
   return {
     id: rfq.id,
     code: rfq.code,
     date: rfq.date,
     description: rfq.description,
-    items: rfq.items || [],
+    items: parsedItems,
     status: rfq.status
   };
 };
