@@ -19,6 +19,12 @@ class User {
 
   static async create(userData) {
     const { id, name, username, role, permissions, password } = userData;
+
+    // Check if password is provided and is a string
+    if (!password || typeof password !== 'string') {
+      throw new Error('Password is required and must be a string');
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     await run(`
       INSERT INTO users (id, name, username, role, permissions, password)
@@ -31,6 +37,10 @@ class User {
   static async update(id, userData) {
     const { name, username, role, permissions, password } = userData;
     if (password) {
+      // Check if password is a string when provided
+      if (typeof password !== 'string') {
+        throw new Error('Password must be a string');
+      }
       const hashedPassword = await bcrypt.hash(password, 10);
       await run(`
         UPDATE users

@@ -72,13 +72,24 @@ const validateTask = [
   body('totalDowntimeMinutes').isInt({ min: 0 }).withMessage('Total downtime minutes must be a non-negative integer')
 ];
 
-// Validation rules for User
+// Validation rules for User creation
 const validateUser = [
   body('id').notEmpty().withMessage('ID is required'),
   body('name').notEmpty().withMessage('Name is required'),
   body('username').notEmpty().withMessage('Username is required'),
+  body('password').notEmpty().withMessage('Password is required'),
   body('role').isIn(['ADMIN', 'OPERATOR', 'MANAGER']).withMessage('Role must be one of: ADMIN, OPERATOR, MANAGER'),
   body('permissions').isObject().withMessage('Permissions must be an object')
+];
+
+// Validation rules for User update
+const validateUserUpdate = [
+  body('id').optional().notEmpty().withMessage('ID cannot be empty if provided'),
+  body('name').optional().notEmpty().withMessage('Name cannot be empty if provided'),
+  body('username').optional().notEmpty().withMessage('Username cannot be empty if provided'),
+  body('password').optional().notEmpty().withMessage('Password cannot be empty if provided'),
+  body('role').optional().isIn(['ADMIN', 'OPERATOR', 'MANAGER']).withMessage('Role must be one of: ADMIN, OPERATOR, MANAGER'),
+  body('permissions').optional().isObject().withMessage('Permissions must be an object')
 ];
 
 // Validation rules for Production Log
@@ -190,6 +201,7 @@ module.exports = {
   validateProjectItem,
   validateTask,
   validateUser,
+  validateUserUpdate,
   validateProductionLog,
   validateSupplier,
   validateRFQ,

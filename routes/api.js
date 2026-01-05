@@ -27,6 +27,7 @@ const {
   validateProjectItem,
   validateTask,
   validateUser,
+  validateUserUpdate,
   validateProductionLog,
   validateSupplier,
   validateRFQ,
@@ -85,7 +86,7 @@ router.get('/users', UserController.getAllUsers);
 router.get('/users/:id', UserController.getUserById);
 router.get('/users/username/:username', UserController.getUserByUsername);
 router.post('/users', validateUser, UserController.createUser);
-router.put('/users/:id', validateUser, UserController.updateUser);
+router.put('/users/:id', validateUserUpdate, UserController.updateUser);
 router.delete('/users/:id', UserController.deleteUser);
 router.post('/login', UserController.login);
 
