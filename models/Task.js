@@ -2,7 +2,7 @@ const { query, run } = require('../config/db');
 
 class Task {
   static async findAll() {
-    const result = await query('SELECT * FROM tasks ORDER BY id DESC');
+    const result = await query('SELECT * FROM tasks ORDER BY id ASC');
     return result.rows;
   }
 
@@ -12,7 +12,7 @@ class Task {
   }
 
   static async findByProjectId(projectId) {
-    const result = await query('SELECT * FROM tasks WHERE projectId = ?', [projectId]);
+    const result = await query('SELECT * FROM tasks WHERE projectId = ? ORDER BY id ASC', [projectId]);
     return result.rows;
   }
 

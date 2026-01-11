@@ -2,7 +2,7 @@ const { query, run } = require('../config/db');
 
 class ProjectItem {
   static async findAll() {
-    const result = await query('SELECT * FROM project_items ORDER BY name');
+    const result = await query('SELECT * FROM project_items ORDER BY id ASC');
     return result.rows.map(item => {
       if (item.assemblyStats) {
         try {
@@ -38,7 +38,7 @@ class ProjectItem {
   }
 
   static async findByProjectId(projectId) {
-    const result = await query('SELECT * FROM project_items WHERE projectId = ?', [projectId]);
+    const result = await query('SELECT * FROM project_items WHERE projectId = ? ORDER BY id ASC', [projectId]);
     return result.rows.map(item => {
       if (item.assemblyStats) {
         try {
